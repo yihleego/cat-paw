@@ -59,8 +59,8 @@ fn window_plugin() -> WindowPlugin {
 
     let cursor_options = CursorOptions {
         visible: false,
-        grab_mode: CursorGrabMode::None,
         hit_test: false,
+        ..default()
     };
 
     WindowPlugin {
