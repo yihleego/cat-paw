@@ -35,9 +35,9 @@ struct PawFinger {
 
 // Visual constants
 const OUTLINE_WIDTH: f32 = 6.0;
-const ARM_WIDTH: f32 = 40.0;
-const PALM_RADIUS: f32 = 50.0;
-const FINGER_RADIUS: f32 = 16.0;
+const ARM_WIDTH: f32 = 50.0;
+const PALM_RADIUS: f32 = 40.0;
+const FINGER_RADIUS: f32 = 25.0;
 // Colors
 const COLOR_FILL: Color = Color::WHITE;
 const COLOR_OUTLINE: Color = Color::BLACK;
@@ -183,10 +183,10 @@ fn setup(
             // Fingers
             let fingers_params: [(usize, f32, f32); 4] = [
                 // Index, Angle (deg), Radius (absolute)
-                (0, -55.0, 47.0),
-                (1, -18.0, 48.0),
-                (2, 18.0, 48.0),
-                (3, 55.0, 47.0),
+                (0, -60.0, 45.0),
+                (1, -20.0, 52.0),
+                (2, 20.0, 52.0),
+                (3, 60.0, 45.0),
             ];
 
             for (i, angle_deg, dist) in fingers_params {
