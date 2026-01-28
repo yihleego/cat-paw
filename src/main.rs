@@ -1,5 +1,7 @@
 use bevy::prelude::*;
-use bevy::window::{CompositeAlphaMode, CursorGrabMode, CursorOptions, WindowLevel};
+use bevy::window::{
+    CompositeAlphaMode, CursorGrabMode, CursorOptions, WindowLevel,
+};
 
 fn main() {
     App::new()
@@ -48,9 +50,6 @@ fn window_plugin() -> WindowPlugin {
         resizable: false,
         has_shadow: false,
         window_level: WindowLevel::AlwaysOnTop,
-        //mode: WindowMode::Windowed,
-        //position: WindowPosition::Centered(MonitorSelection::Primary),
-        //resolution: calculate_initial_resolution(),
         #[cfg(target_os = "macos")]
         composite_alpha_mode: CompositeAlphaMode::PostMultiplied,
         #[cfg(target_os = "linux")]
