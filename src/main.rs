@@ -28,6 +28,9 @@ struct PawArm;
 struct PawPalm;
 
 #[derive(Component)]
+struct PawBottom;
+
+#[derive(Component)]
 struct PawFinger {
     base_pos: Vec3,
     index: usize,
@@ -100,6 +103,24 @@ fn setup(
             ));
         });
 
+    // Spawn Arm Bottom (Semi-circle effect)
+    commands
+        .spawn((
+            Mesh2d(mesh_circle.clone()),
+            MeshMaterial2d(mat_black.clone()),
+            Transform::from_scale(Vec3::splat((ARM_WIDTH + OUTLINE_WIDTH) / 2.0)),
+            PawBottom,
+        ))
+        .with_children(|parent| {
+            // Inner white bottom
+            parent.spawn((
+                Mesh2d(mesh_circle.clone()),
+                MeshMaterial2d(mat_white.clone()),
+                Transform::from_xyz(0.0, 0.0, 0.1)
+                    .with_scale(Vec3::splat((ARM_WIDTH - OUTLINE_WIDTH) / 2.0 / ((ARM_WIDTH + OUTLINE_WIDTH) / 2.0))),
+            ));
+        });
+
     // Spawn Palm
     commands
         .spawn((
@@ -155,8 +176,9 @@ fn setup(
 fn follow_mouse(
     window_query: Query<&Window>,
     camera_query: Query<(&Camera, &GlobalTransform)>,
-    mut arm_query: Query<&mut Transform, (With<PawArm>, Without<PawPalm>)>,
-    mut palm_query: Query<&mut Transform, (With<PawPalm>, Without<PawArm>)>,
+    mut arm_query: Query<&mut Transform, (With<PawArm>, Without<PawPalm>, Without<PawBottom>)>,
+    mut palm_query: Query<&mut Transform, (With<PawPalm>, Without<PawArm>, Without<PawBottom>)>,
+    mut bottom_query: Query<&mut Transform, (With<PawBottom>, Without<PawArm>, Without<PawPalm>)>,
 ) {
     let Ok(window) = window_query.single() else {
         return;
@@ -184,6 +206,10 @@ fn follow_mouse(
                 transform.translation = midpoint.extend(1.0);
                 transform.rotation = Quat::from_rotation_z(angle);
                 transform.scale = Vec3::new(ARM_WIDTH + OUTLINE_WIDTH, length, 1.0);
+            }
+
+            for mut transform in bottom_query.iter_mut() {
+                transform.translation = start_pos.extend(1.0);
             }
         }
     }
