@@ -35,7 +35,7 @@ struct PawFinger {
 
 // Visual constants
 const OUTLINE_WIDTH: f32 = 6.0;
-const ARM_WIDTH: f32 = 50.0;
+const ARM_WIDTH: f32 = 60.0;
 const PALM_RADIUS: f32 = 40.0;
 const FINGER_RADIUS: f32 = 25.0;
 // Colors
@@ -183,10 +183,10 @@ fn setup(
             // Fingers
             let fingers_params: [(usize, f32, f32); 4] = [
                 // Index, Angle (deg), Radius (absolute)
-                (0, -60.0, 45.0),
-                (1, -20.0, 52.0),
-                (2, 20.0, 52.0),
-                (3, 60.0, 45.0),
+                (0, -50.0, 36.0),
+                (1, -15.0, 43.0),
+                (2, 15.0, 43.0),
+                (3, 50.0, 36.0),
             ];
 
             for (i, angle_deg, dist) in fingers_params {
@@ -318,7 +318,7 @@ fn animate_paw(
         if factor < 0.0 {
             // Clenching (factor 0 to -1)
             let t = -factor;
-            let clench_offset = original_pos * -0.4 * t; // Move inward
+            let clench_offset = original_pos * -0.6 * t; // Move inward
             transform.translation = original_pos + clench_offset;
             transform.scale = Vec3::splat(base_scale * (1.0 - 0.2 * t)); // Shrink
 
