@@ -136,7 +136,7 @@ fn setup(
             parent.spawn((
                 Mesh2d(mesh_rect.clone()),
                 MeshMaterial2d(mat_white.clone()),
-                Transform::from_xyz(0.0, 0.0, 0.1),
+                Transform::from_xyz(0.0, 0.0, 1.0),
             ));
         });
 
@@ -153,7 +153,7 @@ fn setup(
             parent.spawn((
                 Mesh2d(mesh_circle.clone()),
                 MeshMaterial2d(mat_white.clone()),
-                Transform::from_xyz(0.0, 0.0, 0.1).with_scale(Vec3::splat(
+                Transform::from_xyz(0.0, 0.0, 1.0).with_scale(Vec3::splat(
                     (ARM_WIDTH - OUTLINE_WIDTH) / 2.0 / ((ARM_WIDTH + OUTLINE_WIDTH) / 2.0),
                 )),
             ));
@@ -175,7 +175,7 @@ fn setup(
             parent.spawn((
                 Mesh2d(mesh_circle.clone()),
                 MeshMaterial2d(mat_white.clone()),
-                Transform::from_xyz(0.0, 0.0, 0.5).with_scale(Vec3::splat(
+                Transform::from_xyz(0.0, 0.0, 1.0).with_scale(Vec3::splat(
                     PALM_RADIUS / palm_scale,
                 )),
             ));
@@ -210,7 +210,7 @@ fn setup(
                         f_parent.spawn((
                             Mesh2d(mesh_circle.clone()),
                             MeshMaterial2d(mat_white.clone()),
-                            Transform::from_xyz(0.0, 0.0, 0.5).with_scale(Vec3::splat(
+                            Transform::from_xyz(0.0, 0.0, 1.0).with_scale(Vec3::splat(
                                 FINGER_RADIUS / finger_scale,
                             )),
                         ));
@@ -242,7 +242,7 @@ fn follow_mouse(
             let angle = diff.y.atan2(diff.x) - std::f32::consts::FRAC_PI_2;
 
             for mut transform in palm_query.iter_mut() {
-                transform.translation = mouse_world_pos.extend(2.0);
+                transform.translation = mouse_world_pos.extend(1.0);
                 transform.rotation = Quat::from_rotation_z(angle);
             }
 
