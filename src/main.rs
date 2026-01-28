@@ -1,6 +1,6 @@
 use bevy::ecs::system::NonSendMarker;
 use bevy::prelude::*;
-use bevy::window::{CompositeAlphaMode, CursorGrabMode, CursorOptions, PrimaryWindow, WindowLevel};
+use bevy::window::{CompositeAlphaMode, CursorOptions, PrimaryWindow, WindowLevel};
 use bevy::winit::WINIT_WINDOWS;
 
 fn main() {
@@ -278,7 +278,8 @@ fn update_inner_arm(
 fn animate_paw(
     mouse_button: Res<ButtonInput<MouseButton>>,
     mut anim_state: ResMut<PawAnimState>,
-    mut fingers: Query<(&mut Transform, &PawFinger)>,
+    mut palm_query: Query<&mut Transform, (With<PawPalm>, Without<PawFinger>)>,
+    mut fingers: Query<(&mut Transform, &PawFinger), Without<PawPalm>>,
     time: Res<Time>,
 ) {
     let mut target = 0.0f32;
@@ -289,25 +290,56 @@ fn animate_paw(
     }
 
     // Interpolate
-    let speed = 10.0;
+    let speed = 15.0; // Faster response
     anim_state.factor += (target - anim_state.factor) * speed * time.delta_secs();
+
+    let factor = anim_state.factor;
+
+    // Palm animation: slightly squash/stretch
+    for mut palm_transform in palm_query.iter_mut() {
+        let base_palm_scale = PALM_RADIUS + OUTLINE_WIDTH;
+        let scale_y = base_palm_scale * (1.0 + factor * 0.1);
+        let scale_x = base_palm_scale * (1.0 - factor * 0.05);
+        palm_transform.scale = Vec3::new(scale_x, scale_y, 1.0);
+    }
 
     for (mut transform, finger) in fingers.iter_mut() {
         let original_pos = finger.base_pos;
+        let base_scale = (FINGER_RADIUS + OUTLINE_WIDTH) / (PALM_RADIUS + OUTLINE_WIDTH);
 
-        // Base clench offset
-        let clench_offset = original_pos * -0.3; // Move 30% inward
+        if factor < 0.0 {
+            // Clenching (factor 0 to -1)
+            let t = -factor;
+            let clench_offset = original_pos * -0.4 * t; // Move inward
+            transform.translation = original_pos + clench_offset;
+            transform.scale = Vec3::splat(base_scale * (1.0 - 0.2 * t)); // Shrink
 
-        // Base open offset
-        let mut open_offset = original_pos * 0.2; // Move 20% outward
-        open_offset.x *= 1.5; // Spread wider horizontally
-
-        let current_offset = if anim_state.factor < 0.0 {
-            clench_offset * -anim_state.factor
+            // Rotate fingers towards center
+            let angle = match finger.index {
+                0 => 0.4 * t,
+                1 => 0.15 * t,
+                2 => -0.15 * t,
+                3 => -0.4 * t,
+                _ => 0.0,
+            };
+            transform.rotation = Quat::from_rotation_z(angle);
         } else {
-            open_offset * anim_state.factor
-        };
+            // Opening (factor 0 to 1)
+            let t = factor;
+            let mut open_offset = original_pos * 0.3 * t; // Move outward
+            open_offset.x *= 1.6; // Spread wider
+            transform.translation = original_pos + open_offset;
+            transform.scale = Vec3::splat(base_scale * (1.0 + 0.15 * t)); // Grow
 
-        transform.translation = original_pos + current_offset;
+            // Rotate fingers away from center
+            let angle = match finger.index {
+                0 => -0.25 * t,
+                1 => -0.1 * t,
+                2 => 0.1 * t,
+                3 => 0.25 * t,
+                _ => 0.0,
+            };
+            transform.rotation = Quat::from_rotation_z(angle);
+        }
     }
 }
