@@ -175,7 +175,7 @@ fn setup(
             parent.spawn((
                 Mesh2d(mesh_circle.clone()),
                 MeshMaterial2d(mat_white.clone()),
-                Transform::from_xyz(0.0, 0.0, 0.1).with_scale(Vec3::splat(
+                Transform::from_xyz(0.0, 0.0, 0.5).with_scale(Vec3::splat(
                     PALM_RADIUS / palm_scale,
                 )),
             ));
@@ -195,7 +195,7 @@ fn setup(
                 let y_abs = dist * angle_rad.cos();
 
                 // Normalized position relative to parent scale
-                // Use z = -0.1 to place fingers behind the palm
+                // Finger black circle stays behind the palm black circle
                 let base_pos = Vec3::new(x_abs / palm_scale, y_abs / palm_scale, -0.1);
 
                 parent
@@ -206,10 +206,11 @@ fn setup(
                         PawFinger { base_pos, index: i },
                     ))
                     .with_children(|f_parent| {
+                        // Finger white circle moves in front of palm black circle but behind palm white circle
                         f_parent.spawn((
                             Mesh2d(mesh_circle.clone()),
                             MeshMaterial2d(mat_white.clone()),
-                            Transform::from_xyz(0.0, 0.0, 0.1).with_scale(Vec3::splat(
+                            Transform::from_xyz(0.0, 0.0, 0.5).with_scale(Vec3::splat(
                                 FINGER_RADIUS / finger_scale,
                             )),
                         ));
