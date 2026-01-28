@@ -1,7 +1,5 @@
 use bevy::prelude::*;
-use bevy::window::{
-    CompositeAlphaMode, CursorOptions, PrimaryWindow, WindowLevel,
-};
+use bevy::window::{CompositeAlphaMode, CursorGrabMode, CursorOptions, WindowLevel};
 
 fn main() {
     App::new()
@@ -43,11 +41,12 @@ const COLOR_FILL: Color = Color::WHITE;
 const COLOR_OUTLINE: Color = Color::BLACK;
 
 fn window_plugin() -> WindowPlugin {
-    let mut window=Window {
+    let mut window = Window {
         title: "Cat Paw".into(),
         transparent: true,
         decorations: false,
         resizable: false,
+        has_shadow: false,
         window_level: WindowLevel::AlwaysOnTop,
         //mode: WindowMode::Windowed,
         //position: WindowPosition::Centered(MonitorSelection::Primary),
@@ -60,8 +59,15 @@ fn window_plugin() -> WindowPlugin {
     };
     window.set_maximized(true);
 
+    let cursor_options = CursorOptions {
+        visible: false,
+        grab_mode: CursorGrabMode::None,
+        hit_test: false,
+    };
+
     WindowPlugin {
         primary_window: Some(window),
+        primary_cursor_options: Some(cursor_options),
         ..default()
     }
 }
@@ -69,12 +75,7 @@ fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
-    primary_window: Single<(&mut Window, &mut CursorOptions), With<PrimaryWindow>>,
 ) {
-    let (_, mut cursor_options) = primary_window.into_inner();
-    cursor_options.hit_test = false;
-    cursor_options.visible = false;
-
     commands.spawn(Camera2d);
 
     let mesh_circle = meshes.add(Circle::new(1.0));
