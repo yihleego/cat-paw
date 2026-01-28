@@ -1,0 +1,30 @@
+[package]
+name = "cat-paw"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+authors = ["Leego <i@leego.io>"]
+keywords = ["gamedev", "game", "bevy"]
+repository = "https://github.com/yihleego/cat-paw"
+
+[dependencies]
+bevy = { version = "0.18", default-features = false, features = ["2d"] }
+winit = { version = "0.30", default-features = false, features = ["rwh_06"] }
+image = { version = "0.25", default-features = false }
+device_query = "4.0"
+
+[build-dependencies]
+winres = "0.1"
+
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"
