@@ -19,9 +19,6 @@ struct PawAnimState {
 }
 
 #[derive(Component)]
-struct PawRoot;
-
-#[derive(Component)]
 struct PawArm;
 
 #[derive(Component)]
