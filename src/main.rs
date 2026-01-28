@@ -1,14 +1,14 @@
+use bevy::ecs::system::NonSendMarker;
 use bevy::prelude::*;
-use bevy::window::{
-    CompositeAlphaMode, CursorGrabMode, CursorOptions, WindowLevel,
-};
+use bevy::window::{CompositeAlphaMode, CursorGrabMode, CursorOptions, PrimaryWindow, WindowLevel};
+use bevy::winit::WINIT_WINDOWS;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(window_plugin()))
         .insert_resource(ClearColor(Color::NONE))
         .init_resource::<PawAnimState>()
-        .add_systems(Startup, setup)
+        .add_systems(Startup, (setup, setup_primary_window))
         .add_systems(Update, (follow_mouse, update_inner_arm, animate_paw))
         .run();
 }
@@ -46,7 +46,7 @@ const COLOR_FILL: Color = Color::WHITE;
 const COLOR_OUTLINE: Color = Color::BLACK;
 
 fn window_plugin() -> WindowPlugin {
-    let mut window = Window {
+    let window = Window {
         title: "Cat Paw".into(),
         transparent: true,
         decorations: false,
@@ -59,7 +59,6 @@ fn window_plugin() -> WindowPlugin {
         composite_alpha_mode: CompositeAlphaMode::PreMultiplied,
         ..default()
     };
-    window.set_maximized(true);
 
     let cursor_options = CursorOptions {
         visible: false,
@@ -73,6 +72,47 @@ fn window_plugin() -> WindowPlugin {
         ..default()
     }
 }
+
+fn setup_primary_window(
+    primary_window: Single<(Entity, &mut Window), With<PrimaryWindow>>,
+    _non_send_marker: NonSendMarker,
+) {
+    let (entity, mut window) = primary_window.into_inner();
+    WINIT_WINDOWS.with_borrow(|winit_windows| {
+        let Some(winit_window) = winit_windows.get_window(entity) else {
+            error!("Primary window找不到: {:?}", entity);
+            return;
+        };
+        let Some(current_monitor) = winit_window.current_monitor() else {
+            error!("当前显示器找不到: {:?}", entity);
+            return;
+        };
+
+        let monitor_pos = current_monitor.position();
+        let monitor_size = current_monitor.size();
+        let scale_factor = current_monitor.scale_factor() as f32;
+
+        let window_width = monitor_size.width as f32 / scale_factor;
+        let window_height = monitor_size.height as f32 / scale_factor;
+        let window_left = monitor_pos.x;
+        let window_top = monitor_pos.y;
+
+        debug!(
+            "当前屏幕: {:?}, 屏幕尺寸: {}x{}, 窗口新尺寸: {}x{}, 窗口新坐标: {}x{}",
+            current_monitor.name(),
+            monitor_size.width,
+            monitor_size.height,
+            window_width,
+            window_height,
+            window_left,
+            window_top
+        );
+
+        window.resolution.set(window_width, window_height);
+        window.position = WindowPosition::At(IVec2::new(window_left, window_top));
+    });
+}
+
 fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -116,8 +156,9 @@ fn setup(
             parent.spawn((
                 Mesh2d(mesh_circle.clone()),
                 MeshMaterial2d(mat_white.clone()),
-                Transform::from_xyz(0.0, 0.0, 0.1)
-                    .with_scale(Vec3::splat((ARM_WIDTH - OUTLINE_WIDTH) / 2.0 / ((ARM_WIDTH + OUTLINE_WIDTH) / 2.0))),
+                Transform::from_xyz(0.0, 0.0, 0.1).with_scale(Vec3::splat(
+                    (ARM_WIDTH - OUTLINE_WIDTH) / 2.0 / ((ARM_WIDTH + OUTLINE_WIDTH) / 2.0),
+                )),
             ));
         });
 
