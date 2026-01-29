@@ -2,7 +2,10 @@ use bevy::app::AppExit;
 use bevy::ecs::message::MessageWriter;
 use bevy::ecs::system::NonSendMarker;
 use bevy::prelude::*;
-use bevy::window::{CompositeAlphaMode, CursorOptions, PrimaryWindow, WindowLevel};
+use bevy::window::{
+    CompositeAlphaMode, CursorIcon, CursorOptions, CustomCursor, CustomCursorImage, PrimaryWindow,
+    WindowLevel,
+};
 use bevy::winit::WINIT_WINDOWS;
 use device_query::{DeviceQuery, DeviceState, MouseState};
 
@@ -15,9 +18,17 @@ struct GlobalMouseState(MouseState);
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(window_plugin()))
-        .add_systems(Startup, (setup, setup_primary_window))
+        .add_systems(Startup, (setup_primary_window, setup_cat_paw))
         .add_systems(PreUpdate, poll_mouse_input)
-        .add_systems(Update, (follow_mouse, update_inner_arm, animate_paw, handle_shortcuts))
+        .add_systems(
+            Update,
+            (
+                follow_mouse,
+                update_inner_arm,
+                animate_paw,
+                handle_shortcuts,
+            ),
+        )
         .insert_resource(ClearColor(Color::NONE))
         .insert_resource(GlobalDeviceState(DeviceState::new()))
         .init_resource::<PawAnimState>()
@@ -130,7 +141,7 @@ fn setup_primary_window(
     });
 }
 
-fn setup(
+fn setup_cat_paw(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
@@ -195,9 +206,8 @@ fn setup(
             parent.spawn((
                 Mesh2d(mesh_circle.clone()),
                 MeshMaterial2d(mat_white.clone()),
-                Transform::from_xyz(0.0, 0.0, 1.0).with_scale(Vec3::splat(
-                    PALM_RADIUS / palm_scale,
-                )),
+                Transform::from_xyz(0.0, 0.0, 1.0)
+                    .with_scale(Vec3::splat(PALM_RADIUS / palm_scale)),
             ));
 
             // Fingers
@@ -230,9 +240,8 @@ fn setup(
                         f_parent.spawn((
                             Mesh2d(mesh_circle.clone()),
                             MeshMaterial2d(mat_white.clone()),
-                            Transform::from_xyz(0.0, 0.0, 1.0).with_scale(Vec3::splat(
-                                FINGER_RADIUS / finger_scale,
-                            )),
+                            Transform::from_xyz(0.0, 0.0, 1.0)
+                                .with_scale(Vec3::splat(FINGER_RADIUS / finger_scale)),
                         ));
                     });
             }
@@ -409,7 +418,7 @@ fn handle_shortcuts(
             cursor_control.lr_press_start = Some(now);
         } else {
             let start = cursor_control.lr_press_start.unwrap();
-            if now - start > 3.0 {
+            if now - start > 2.0 {
                 exit.write(AppExit::Success);
             }
         }
@@ -423,7 +432,7 @@ fn handle_shortcuts(
 
                 // Toggle OS cursor visibility (Inverse of Paw visibility)
                 if let Some(mut options) = cursor_options_query.iter_mut().next() {
-                     options.visible = cursor_control.is_hidden;
+                    options.visible = cursor_control.is_hidden;
                 }
 
                 // Toggle Paw visibility
