@@ -2,20 +2,32 @@ use bevy::ecs::system::NonSendMarker;
 use bevy::prelude::*;
 use bevy::window::{CompositeAlphaMode, CursorOptions, PrimaryWindow, WindowLevel};
 use bevy::winit::WINIT_WINDOWS;
-use device_query::{DeviceQuery, DeviceState};
+use device_query::{DeviceQuery, DeviceState, MouseState};
 
 #[derive(Resource)]
 struct GlobalDeviceState(DeviceState);
 
+#[derive(Resource, Default)]
+struct GlobalMouseState(MouseState);
+
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(window_plugin()))
-        .insert_resource(ClearColor(Color::NONE))
-        .init_resource::<PawAnimState>()
-        .insert_resource(GlobalDeviceState(DeviceState::new()))
         .add_systems(Startup, (setup, setup_primary_window))
+        .add_systems(PreUpdate, poll_mouse_input)
         .add_systems(Update, (follow_mouse, update_inner_arm, animate_paw))
+        .insert_resource(ClearColor(Color::NONE))
+        .insert_resource(GlobalDeviceState(DeviceState::new()))
+        .init_resource::<PawAnimState>()
+        .init_resource::<GlobalMouseState>()
         .run();
+}
+
+fn poll_mouse_input(
+    device_state: Res<GlobalDeviceState>,
+    mut mouse_state: ResMut<GlobalMouseState>,
+) {
+    mouse_state.0 = device_state.0.get_mouse();
 }
 
 #[derive(Resource, Default)]
@@ -227,7 +239,7 @@ fn setup(
 fn follow_mouse(
     window_query: Query<&Window>,
     camera_query: Query<(&Camera, &GlobalTransform)>,
-    device_state: Res<GlobalDeviceState>,
+    mouse_state: Res<GlobalMouseState>,
     mut arm_query: Query<&mut Transform, (With<PawArm>, Without<PawPalm>, Without<PawBottom>)>,
     mut palm_query: Query<&mut Transform, (With<PawPalm>, Without<PawArm>, Without<PawBottom>)>,
     mut bottom_query: Query<&mut Transform, (With<PawBottom>, Without<PawArm>, Without<PawPalm>)>,
@@ -239,7 +251,7 @@ fn follow_mouse(
         return;
     };
 
-    let mouse = device_state.0.get_mouse();
+    let mouse = &mouse_state.0;
     let window_origin = match window.position {
         WindowPosition::At(pos) => Vec2::new(pos.x as f32, pos.y as f32),
         _ => Vec2::ZERO,
@@ -295,13 +307,13 @@ fn update_inner_arm(
 }
 
 fn animate_paw(
-    device_state: Res<GlobalDeviceState>,
+    mouse_state: Res<GlobalMouseState>,
     mut anim_state: ResMut<PawAnimState>,
     mut palm_query: Query<&mut Transform, (With<PawPalm>, Without<PawFinger>)>,
     mut fingers: Query<(&mut Transform, &PawFinger), Without<PawPalm>>,
     time: Res<Time>,
 ) {
-    let mouse = device_state.0.get_mouse();
+    let mouse = &mouse_state.0;
     let left_pressed = mouse.button_pressed.get(1).cloned().unwrap_or(false);
     let right_pressed = mouse.button_pressed.get(2).cloned().unwrap_or(false);
 
