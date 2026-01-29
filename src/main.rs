@@ -46,11 +46,6 @@ struct GlobalDeviceState(DeviceState);
 #[derive(Resource, Default)]
 struct GlobalMouseState(MouseState);
 
-#[derive(Resource, Default)]
-struct PawAnimState {
-    factor: f32, // -1.0 (Clench) to 1.0 (Open), 0.0 (Neutral)
-}
-
 #[derive(Component)]
 struct PawArm;
 
@@ -64,6 +59,17 @@ struct PawBottom;
 struct PawFinger {
     base_pos: Vec3,
     index: usize,
+}
+
+#[derive(Resource, Default)]
+struct PawAnimState {
+    factor: f32, // -1.0 (Clench) to 1.0 (Open), 0.0 (Neutral)
+}
+
+#[derive(Resource, Default)]
+struct CursorControl {
+    is_hidden: bool,
+    lr_press_start: Option<f64>,
 }
 
 fn window_plugin() -> WindowPlugin {
@@ -389,12 +395,6 @@ fn animate_paw(
             transform.rotation = Quat::from_rotation_z(angle);
         }
     }
-}
-
-#[derive(Resource, Default)]
-struct CursorControl {
-    is_hidden: bool,
-    lr_press_start: Option<f64>,
 }
 
 fn handle_shortcuts(
