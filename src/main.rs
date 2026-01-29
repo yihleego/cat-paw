@@ -2,10 +2,7 @@ use bevy::app::AppExit;
 use bevy::ecs::message::MessageWriter;
 use bevy::ecs::system::NonSendMarker;
 use bevy::prelude::*;
-use bevy::window::{
-    CompositeAlphaMode, CursorIcon, CursorOptions, CustomCursor, CustomCursorImage, PrimaryWindow,
-    WindowLevel,
-};
+use bevy::window::{CompositeAlphaMode, CursorOptions, PrimaryWindow, WindowLevel};
 use bevy::winit::WINIT_WINDOWS;
 use device_query::{DeviceQuery, DeviceState, MouseState};
 
