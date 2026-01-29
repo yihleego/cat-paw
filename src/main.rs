@@ -36,6 +36,7 @@ const OUTLINE_WIDTH: f32 = 10.0;
 const ARM_WIDTH: f32 = 60.0;
 const PALM_RADIUS: f32 = 40.0;
 const FINGER_RADIUS: f32 = 25.0;
+const PAW_OFFSET_TO_TOP: f32 = 75.0; // Distance from palm center to top of middle fingers
 // Colors
 const COLOR_FILL: Color = Color::WHITE;
 const COLOR_OUTLINE: Color = Color::BLACK;
@@ -278,6 +279,7 @@ fn follow_mouse(
     window_query: Query<&Window>,
     camera_query: Query<(&Camera, &GlobalTransform)>,
     mouse_state: Res<GlobalMouseState>,
+    anim_state: Res<PawAnimState>,
     mut arm_query: Query<&mut Transform, (With<PawArm>, Without<PawPalm>, Without<PawBottom>)>,
     mut palm_query: Query<&mut Transform, (With<PawPalm>, Without<PawArm>, Without<PawBottom>)>,
     mut bottom_query: Query<&mut Transform, (With<PawBottom>, Without<PawArm>, Without<PawPalm>)>,
@@ -302,20 +304,34 @@ fn follow_mouse(
         let mouse_world_pos: Vec2 = mouse_world_pos;
         let start_pos = Vec2::new(0.0, -window.height() / 2.0); // Start from bottom center
         let diff = mouse_world_pos - start_pos;
-        let length = diff.length();
-        let angle = diff.y.atan2(diff.x) - std::f32::consts::FRAC_PI_2;
+
+        // Calculate the direction and offset the palm center so the top of the paw is at the cursor
+        // The offset changes slightly when the paw is clenching/opening
+        let factor = anim_state.factor;
+        let dynamic_offset = if factor < 0.0 {
+            PAW_OFFSET_TO_TOP + factor * 17.0
+        } else {
+            PAW_OFFSET_TO_TOP + factor * 11.0
+        };
+
+        let direction = diff.normalize_or_zero();
+        let palm_center_pos = mouse_world_pos - direction * dynamic_offset;
+
+        let arm_diff = palm_center_pos - start_pos;
+        let length = arm_diff.length();
+        let angle = arm_diff.y.atan2(arm_diff.x) - std::f32::consts::FRAC_PI_2;
 
         for mut transform in palm_query.iter_mut() {
-            transform.translation = mouse_world_pos.extend(1.0);
+            transform.translation = palm_center_pos.extend(1.0);
             transform.rotation = Quat::from_rotation_z(angle);
         }
 
-        let midpoint = (start_pos + mouse_world_pos) / 2.0;
+        let midpoint = (start_pos + palm_center_pos) / 2.0;
 
         for mut transform in arm_query.iter_mut() {
             transform.translation = midpoint.extend(1.0);
             transform.rotation = Quat::from_rotation_z(angle);
-            // Stretch arm to reach the mouse
+            // Stretch arm to reach the palm center
             transform.scale = Vec3::new(ARM_WIDTH + OUTLINE_WIDTH, length, 1.0);
         }
 
