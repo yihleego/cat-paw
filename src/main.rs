@@ -1,3 +1,5 @@
+use bevy::app::AppExit;
+use bevy::ecs::message::MessageWriter;
 use bevy::ecs::system::NonSendMarker;
 use bevy::prelude::*;
 use bevy::window::{CompositeAlphaMode, CursorOptions, PrimaryWindow, WindowLevel};
@@ -15,11 +17,12 @@ fn main() {
         .add_plugins(DefaultPlugins.set(window_plugin()))
         .add_systems(Startup, (setup, setup_primary_window))
         .add_systems(PreUpdate, poll_mouse_input)
-        .add_systems(Update, (follow_mouse, update_inner_arm, animate_paw))
+        .add_systems(Update, (follow_mouse, update_inner_arm, animate_paw, handle_shortcuts))
         .insert_resource(ClearColor(Color::NONE))
         .insert_resource(GlobalDeviceState(DeviceState::new()))
         .init_resource::<PawAnimState>()
         .init_resource::<GlobalMouseState>()
+        .init_resource::<CursorControl>()
         .run();
 }
 
@@ -375,6 +378,66 @@ fn animate_paw(
                 _ => 0.0,
             };
             transform.rotation = Quat::from_rotation_z(angle);
+        }
+    }
+}
+
+#[derive(Resource, Default)]
+struct CursorControl {
+    is_hidden: bool,
+    lr_press_start: Option<f64>,
+}
+
+fn handle_shortcuts(
+    mouse_state: Res<GlobalMouseState>,
+    mut cursor_control: ResMut<CursorControl>,
+    mut exit: MessageWriter<AppExit>,
+    mut cursor_options_query: Query<&mut CursorOptions, With<PrimaryWindow>>,
+    mut paw_visibility: Query<&mut Visibility, Or<(With<PawArm>, With<PawPalm>, With<PawBottom>)>>,
+    time: Res<Time>,
+) {
+    let mouse = &mouse_state.0;
+    // 1=Left, 2=Right
+    let left = mouse.button_pressed.get(1).cloned().unwrap_or(false);
+    let right = mouse.button_pressed.get(2).cloned().unwrap_or(false);
+    let both_pressed = left && right;
+
+    let now = time.elapsed_secs_f64();
+
+    if both_pressed {
+        if cursor_control.lr_press_start.is_none() {
+            cursor_control.lr_press_start = Some(now);
+        } else {
+            let start = cursor_control.lr_press_start.unwrap();
+            if now - start > 3.0 {
+                exit.write(AppExit::Success);
+            }
+        }
+    } else {
+        if let Some(start) = cursor_control.lr_press_start {
+            // Released
+            let duration = now - start;
+            if duration < 2.0 {
+                // Toggle
+                cursor_control.is_hidden = !cursor_control.is_hidden;
+
+                // Toggle OS cursor visibility (Inverse of Paw visibility)
+                if let Some(mut options) = cursor_options_query.iter_mut().next() {
+                     options.visible = cursor_control.is_hidden;
+                }
+
+                // Toggle Paw visibility
+                let new_vis = if cursor_control.is_hidden {
+                    Visibility::Hidden
+                } else {
+                    Visibility::Inherited
+                };
+
+                for mut vis in paw_visibility.iter_mut() {
+                    *vis = new_vis;
+                }
+            }
+            cursor_control.lr_press_start = None;
         }
     }
 }
