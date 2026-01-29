@@ -9,12 +9,6 @@ use bevy::window::{
 use bevy::winit::WINIT_WINDOWS;
 use device_query::{DeviceQuery, DeviceState, MouseState};
 
-#[derive(Resource)]
-struct GlobalDeviceState(DeviceState);
-
-#[derive(Resource, Default)]
-struct GlobalMouseState(MouseState);
-
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(window_plugin()))
@@ -37,12 +31,20 @@ fn main() {
         .run();
 }
 
-fn poll_mouse_input(
-    device_state: Res<GlobalDeviceState>,
-    mut mouse_state: ResMut<GlobalMouseState>,
-) {
-    mouse_state.0 = device_state.0.get_mouse();
-}
+// Visual constants
+const OUTLINE_WIDTH: f32 = 10.0;
+const ARM_WIDTH: f32 = 60.0;
+const PALM_RADIUS: f32 = 40.0;
+const FINGER_RADIUS: f32 = 25.0;
+// Colors
+const COLOR_FILL: Color = Color::WHITE;
+const COLOR_OUTLINE: Color = Color::BLACK;
+
+#[derive(Resource)]
+struct GlobalDeviceState(DeviceState);
+
+#[derive(Resource, Default)]
+struct GlobalMouseState(MouseState);
 
 #[derive(Resource, Default)]
 struct PawAnimState {
@@ -63,15 +65,6 @@ struct PawFinger {
     base_pos: Vec3,
     index: usize,
 }
-
-// Visual constants
-const OUTLINE_WIDTH: f32 = 10.0;
-const ARM_WIDTH: f32 = 60.0;
-const PALM_RADIUS: f32 = 40.0;
-const FINGER_RADIUS: f32 = 25.0;
-// Colors
-const COLOR_FILL: Color = Color::WHITE;
-const COLOR_OUTLINE: Color = Color::BLACK;
 
 fn window_plugin() -> WindowPlugin {
     let window = Window {
@@ -246,6 +239,13 @@ fn setup_cat_paw(
                     });
             }
         });
+}
+
+fn poll_mouse_input(
+    device_state: Res<GlobalDeviceState>,
+    mut mouse_state: ResMut<GlobalMouseState>,
+) {
+    mouse_state.0 = device_state.0.get_mouse();
 }
 
 fn follow_mouse(
