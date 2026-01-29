@@ -2,7 +2,23 @@
 name = "cat-paw"
 version = "0.1.0"
 edition = "2024"
+authors = ["Leego <i@leego.io>"]
+license = "MIT OR Apache-2.0 OR CC0-1.0"
+repository = "https://github.com/leego/cat-paw"
+keywords = ["gamedev", "game", "bevy"]
 
 [dependencies]
-bevy = { version = "0.18.0"}
+bevy = { version = "0.18.0" }
 device_query = "4.0.1"
+
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
