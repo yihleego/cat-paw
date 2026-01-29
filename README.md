@@ -6,12 +6,12 @@
 
 - **Mouse Following**: The paw naturally follows your mouse cursor across the screen.
 - **Interactive Animations**:
-  - **Left Click**: The paw clenches (grabs).
-  - **Right Click**: The paw spreads its fingers (opens wide).
+    - **Left Click**: The paw clenches (grabs).
+    - **Right Click**: The paw spreads its fingers (opens wide).
 - **Global Overlay**: Runs in a transparent, always-on-top window that overlays your entire screen.
 - **Shortcuts**:
-  - **Toggle Visibility**: Press **Left Click + Right Click** simultaneously (short press) to toggle the paw on/off. When the paw is hidden, the system cursor returns.
-  - **Exit**: Press and hold **Left Click + Right Click** for **2 seconds** to close the application.
+    - **Toggle Visibility**: Press **Left Click + Right Click** simultaneously (short press) to toggle the paw on/off. When the paw is hidden, the system cursor returns.
+    - **Exit**: Press and hold **Left Click + Right Click** for **2 seconds** to close the application.
 - **Cross-Platform**: Designed for macOS and Windows.
 
 ## Installation & Building
@@ -32,35 +32,35 @@ cargo run
 
 To create a standalone `.app` bundle for macOS:
 
-1.  Open a terminal in the project root.
-2.  Run the build script:
-    ```bash
-    ./build_macos.sh
-    ```
-3.  The application will be built at `target/release/bundle/CatPaw.app`.
-4.  You can open it with `open target/release/bundle/CatPaw.app` or drag it to your Applications folder.
+1. Open a terminal in the project root.
+2. Run the build script:
+   ```bash
+   ./build_macos.sh
+   ```
+3. The application will be built at `target/release/bundle/CatPaw.app`.
+4. You can open it with `open target/release/bundle/CatPaw.app` or drag it to your Applications folder.
 
 ### Build for Windows
 
 To create a distribution folder for Windows:
 
-1.  Open a Command Prompt or PowerShell in the project root.
-2.  Run the build script:
-    ```cmd
-    build_windows.bat
-    ```
-3.  The application will be located at `target\release\distribution\CatPaw`.
-4.  Run `CatPaw.exe` inside that folder.
+1. Open a Command Prompt or PowerShell in the project root.
+2. Run the build script:
+   ```cmd
+   build_windows.bat
+   ```
+3. The application will be located at `target\release\distribution\CatPaw`.
+4. Run `CatPaw.exe` inside that folder.
 
 ## Usage
 
 Once the application is running:
 
-1.  **Move your mouse**: The paw follows.
-2.  **Left Click**: Watch the paw clench.
-3.  **Right Click**: Watch the paw open.
-4.  **Hide/Show**: Press Left+Right buttons together quickly.
-5.  **Quit**: Press and hold Left+Right buttons together for 2 seconds.
+1. **Move your mouse**: The paw follows.
+2. **Left Click**: Watch the paw clench.
+3. **Right Click**: Watch the paw open.
+4. **Hide/Show**: Press Left+Right buttons together quickly.
+5. **Quit**: Press and hold Left+Right buttons together for 2 seconds.
 
 ## License
 
