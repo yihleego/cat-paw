@@ -20,6 +20,7 @@ fn main() {
                 handle_shortcuts,
             ),
         )
+        // Make the background completely transparent
         .insert_resource(ClearColor(Color::NONE))
         .insert_resource(GlobalDeviceState(DeviceState::new()))
         .init_resource::<PawAnimState>()
@@ -73,10 +74,10 @@ fn window_plugin() -> WindowPlugin {
     let window = Window {
         title: "Cat Paw".into(),
         transparent: true,
-        decorations: false,
+        decorations: false, // No title bar or borders
         resizable: false,
         has_shadow: false,
-        window_level: WindowLevel::AlwaysOnTop,
+        window_level: WindowLevel::AlwaysOnTop, // Keep the paw on top of other windows
         #[cfg(target_os = "macos")]
         composite_alpha_mode: CompositeAlphaMode::PostMultiplied,
         #[cfg(target_os = "linux")]
@@ -85,7 +86,9 @@ fn window_plugin() -> WindowPlugin {
     };
 
     let cursor_options = CursorOptions {
+        // TODO: Cursor hiding is not working as expected
         visible: false,
+        // Allow clicks to pass through to windows below
         hit_test: false,
         ..default()
     };
@@ -97,6 +100,7 @@ fn window_plugin() -> WindowPlugin {
     }
 }
 
+// Sync Bevy window to match the monitor size for full-screen overlay
 fn setup_primary_window(
     primary_window: Single<(Entity, &mut Window), With<PrimaryWindow>>,
     _non_send_marker: NonSendMarker,
@@ -244,6 +248,7 @@ fn setup_cat_paw(
         });
 }
 
+// Poll global mouse input using `device_query` since the window is non-interactive
 fn poll_mouse_input(
     device_state: Res<GlobalDeviceState>,
     mut mouse_state: ResMut<GlobalMouseState>,
@@ -251,6 +256,7 @@ fn poll_mouse_input(
     mouse_state.0 = device_state.0.get_mouse();
 }
 
+// Logic to make the paw follow the mouse cursor
 fn follow_mouse(
     window_query: Query<&Window>,
     camera_query: Query<(&Camera, &GlobalTransform)>,
@@ -267,15 +273,17 @@ fn follow_mouse(
     };
 
     let mouse = &mouse_state.0;
+    // Calculate window origin in screen coordinates
     let window_origin = match window.position {
         WindowPosition::At(pos) => Vec2::new(pos.x as f32, pos.y as f32),
         _ => Vec2::ZERO,
     };
+    // Get cursor position relative to the Bevy window
     let cursor_pos = Vec2::new(mouse.coords.0 as f32, mouse.coords.1 as f32) - window_origin;
 
     if let Ok(mouse_world_pos) = camera.viewport_to_world_2d(camera_transform, cursor_pos) {
         let mouse_world_pos: Vec2 = mouse_world_pos;
-        let start_pos = Vec2::new(0.0, -window.height() / 2.0);
+        let start_pos = Vec2::new(0.0, -window.height() / 2.0); // Start from bottom center
         let diff = mouse_world_pos - start_pos;
         let length = diff.length();
         let angle = diff.y.atan2(diff.x) - std::f32::consts::FRAC_PI_2;
@@ -290,6 +298,7 @@ fn follow_mouse(
         for mut transform in arm_query.iter_mut() {
             transform.translation = midpoint.extend(1.0);
             transform.rotation = Quat::from_rotation_z(angle);
+            // Stretch arm to reach the mouse
             transform.scale = Vec3::new(ARM_WIDTH + OUTLINE_WIDTH, length, 1.0);
         }
 
@@ -299,6 +308,7 @@ fn follow_mouse(
     }
 }
 
+// Ensure the inner (white) part of the arm scales correctly with the outer (black) part
 fn update_inner_arm(
     arm_query: Query<(&Transform, &Children), With<PawArm>>,
     mut inner_query: Query<&mut Transform, Without<PawArm>>,
@@ -321,6 +331,7 @@ fn update_inner_arm(
     }
 }
 
+// Handle mouse clicks for paw animation (clench/open)
 fn animate_paw(
     mouse_state: Res<GlobalMouseState>,
     mut anim_state: ResMut<PawAnimState>,
@@ -334,9 +345,9 @@ fn animate_paw(
 
     let mut target = 0.0f32;
     if left_pressed {
-        target = -1.0;
+        target = -1.0; // Clench
     } else if right_pressed {
-        target = 1.0;
+        target = 1.0; // Open
     }
 
     // Interpolate
@@ -394,6 +405,7 @@ fn animate_paw(
     }
 }
 
+// Handle global shortcuts (Left+Right click)
 fn handle_shortcuts(
     mouse_state: Res<GlobalMouseState>,
     mut cursor_control: ResMut<CursorControl>,
@@ -415,6 +427,7 @@ fn handle_shortcuts(
             cursor_control.lr_press_start = Some(now);
         } else {
             let start = cursor_control.lr_press_start.unwrap();
+            // Long press (> 2s) to exit app
             if now - start > 2.0 {
                 exit.write(AppExit::Success);
             }
@@ -423,6 +436,7 @@ fn handle_shortcuts(
         if let Some(start) = cursor_control.lr_press_start {
             // Released
             let duration = now - start;
+            // Short press (< 2s) to toggle visibility
             if duration < 2.0 {
                 // Toggle
                 cursor_control.is_hidden = !cursor_control.is_hidden;
