@@ -8,7 +8,7 @@ repository = "https://github.com/leego/cat-paw"
 keywords = ["gamedev", "game", "bevy"]
 
 [dependencies]
-bevy = { version = "0.18.0" }
+bevy = { version = "0.18.0", default-features = false, features = ["2d"] }
 device_query = "4.0.1"
 
 [profile.dev]
