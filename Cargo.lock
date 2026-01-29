@@ -1692,6 +1692,8 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "device_query",
+ "image",
+ "winit",
  "winres",
 ]
 

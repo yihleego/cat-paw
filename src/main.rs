@@ -5,6 +5,8 @@ use bevy::prelude::*;
 use bevy::window::{CompositeAlphaMode, CursorOptions, PrimaryWindow, WindowLevel};
 use bevy::winit::WINIT_WINDOWS;
 use device_query::{DeviceQuery, DeviceState, MouseState};
+use std::io::Cursor;
+use winit::window::Icon;
 
 fn main() {
     App::new()
@@ -138,6 +140,21 @@ fn setup_primary_window(
 
         window.resolution.set(window_width, window_height);
         window.position = WindowPosition::At(IVec2::new(window_left, window_top));
+
+        // Set window icon
+        let icon_buf = Cursor::new(include_bytes!("../build/macos/AppIcon.iconset/icon_256x256.png"));
+        if let Ok(image) = image::load(icon_buf, image::ImageFormat::Png) {
+            let image = image.into_rgba8();
+            let (width, height) = image.dimensions();
+            let rgba = image.into_raw();
+            if let Ok(icon) = Icon::from_rgba(rgba, width, height) {
+                winit_window.set_window_icon(Some(icon));
+            } else {
+                error!("Failed to create icon");
+            }
+        } else {
+            error!("Failed to open icon");
+        }
     });
 }
 
