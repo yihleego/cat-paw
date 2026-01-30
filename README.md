@@ -75,9 +75,9 @@ Once the application is running:
 ## Known Issues
 
 - **Transparency Window**: On Windows systems with NVIDIA GPUs, the window background may appear black.
-  [bevy#7544](https://github.com/bevyengine/bevy/issues/7544)
+  ([bevy#7544](https://github.com/bevyengine/bevy/issues/7544))
     - **Solution**: Open **NVIDIA Control Panel**, go to **Manage 3D Settings**, find **Vulkan/OpenGL present method**,
-      and change it to **Prefer native**.
+      and change it to **Prefer native**.  
       <img src="docs/nvidia_settings.png" width="500" alt="nvidia_settings.jpg">
 
 ## License

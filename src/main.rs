@@ -146,7 +146,7 @@ fn setup_primary_window(
         window.resolution.set(window_width, window_height);
         // Hack: On Windows, setting the window size to exactly match the monitor size may cause a black screen
         #[cfg(target_os = "windows")]
-        window.resolution.set(window_width, window_height + 0.1);
+        window.resolution.set(window_width, window_height + 1.0);
         window.position = WindowPosition::At(IVec2::new(window_left, window_top));
 
         // Set window icon
