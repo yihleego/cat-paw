@@ -5,6 +5,10 @@
 **Cat Paw** 是一个有趣、轻量级的桌面覆盖应用程序，使用 Rust 和 [Bevy](https://bevyengine.org/) 游戏引擎编写。
 它用一个动画猫爪替换你的鼠标光标，猫爪会跟随你的移动并对你的点击做出反应！
 
+<p align="center">
+  <img src="docs/screenshot.jpg" width="500" alt="screenshot.jpg">
+</p>
+
 ## 功能特性
 
 - **鼠标跟随**：猫爪会在屏幕上自然地跟随你的鼠标光标。
@@ -28,7 +32,7 @@
 要在开发模式下运行应用程序：
 
 ```bash
-car go run
+cargo run
 ```
 
 ### macOS 构建

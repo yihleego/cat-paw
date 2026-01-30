@@ -6,6 +6,10 @@
 game engine. It replaces your mouse cursor with an animated cat's paw that follows your movements and reacts to your
 clicks!
 
+<p align="center">
+  <img src="docs/screenshot.jpg" width="500" alt="screenshot.jpg">
+</p>
+
 ## Features
 
 - **Mouse Following**: The paw naturally follows your mouse cursor across the screen.
