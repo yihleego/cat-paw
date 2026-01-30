@@ -60,39 +60,6 @@ jobs:
           tag: ${{ github.ref }}
           overwrite: true
 
-  build-linux:
-    name: Build Linux
-    runs-on: ubuntu-latest
-    steps:
-      - name: Get tag
-        id: tag
-        uses: dawidd6/action-get-tag@v1
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Install rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-      - name: Install Dependencies
-        run: sudo apt-get update; sudo apt-get install -y g++ pkg-config libx11-dev libasound2-dev libudev-dev libxkbcommon-dev
-      - name: Build release
-        run: |
-          cargo build --release
-      - name: Prepare release
-        run: |
-          strip target/release/${{ env.APP_NAME }}
-          chmod +x target/release/${{ env.APP_NAME }}
-          mv target/release/${{ env.APP_NAME }} .
-      - name: Bundle release
-        run: |
-          tar -czf ${{ env.APP_NAME }}_linux.tar.gz ${{ env.APP_NAME }} assets credits
-      - name: Upload release
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ env.APP_NAME }}_linux.tar.gz
-          asset_name: ${{ env.APP_NAME }}_${{ steps.tag.outputs.tag }}_linux.tar.gz
-          tag: ${{ github.ref }}
-          overwrite: true
-
   build-windows:
     name: Build Windows
     runs-on: windows-latest
