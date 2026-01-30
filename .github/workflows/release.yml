@@ -21,9 +21,9 @@ jobs:
       matrix:
         include:
           - target: aarch64-apple-darwin
-            suffix: _Silicon
+            suffix: Apple_Silicon
           - target: x86_64-apple-darwin
-            suffix: _Intel
+            suffix: Intel
     env:
       MACOSX_DEPLOYMENT_TARGET: 11.0
     steps:
@@ -59,6 +59,13 @@ jobs:
   build-windows:
     name: Build Windows
     runs-on: windows-latest
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-pc-windows-msvc
+            suffix: x64
+          - target: aarch64-pc-windows-msvc
+            suffix: arm64
     defaults:
       run:
         shell: bash
@@ -70,19 +77,21 @@ jobs:
         uses: actions/checkout@v4
       - name: Install rust toolchain
         uses: dtolnay/rust-toolchain@stable
+        with:
+          target: ${{ matrix.target }}
       - name: Build release
         run: |
-          cargo build --release
+          cargo build --release --target ${{ matrix.target }}
       - name: Zip release
         uses: vimtor/action-zip@v1
         with:
-          files: target/release/${{ env.GAME_EXECUTABLE_NAME }}.exe
+          files: target/${{ matrix.target }}/release/${{ env.GAME_EXECUTABLE_NAME }}.exe
           dest: ${{ env.GAME_EXECUTABLE_NAME }}.zip
       - name: Upload release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ${{ env.GAME_EXECUTABLE_NAME }}.zip
-          asset_name: ${{ env.GAME_APP_NAME }}_${{ steps.tag.outputs.tag }}_Windows.zip
+          asset_name: ${{ env.GAME_APP_NAME }}_${{ steps.tag.outputs.tag }}_Windows_${{ matrix.suffix }}.zip
           tag: ${{ github.ref }}
           overwrite: true
