@@ -57,6 +57,9 @@ struct PawPalm;
 struct PawBottom;
 
 #[derive(Component)]
+struct PawPart;
+
+#[derive(Component)]
 struct PawFinger {
     base_pos: Vec3,
     index: usize,
@@ -70,7 +73,7 @@ struct PawAnimState {
 #[derive(Resource, Default)]
 struct CursorControl {
     is_hidden: bool,
-    lr_press_start: Option<f64>,
+    lr_press_start: Option<f32>,
 }
 
 fn window_plugin() -> WindowPlugin {
@@ -179,6 +182,7 @@ fn setup_cat_paw(
             MeshMaterial2d(mat_black.clone()),
             Transform::default(),
             PawArm,
+            PawPart,
         ))
         .with_children(|parent| {
             // Inner white arm
@@ -196,6 +200,7 @@ fn setup_cat_paw(
             MeshMaterial2d(mat_black.clone()),
             Transform::from_scale(Vec3::splat((ARM_WIDTH + OUTLINE_WIDTH) / 2.0)),
             PawBottom,
+            PawPart,
         ))
         .with_children(|parent| {
             // Inner white bottom
@@ -218,6 +223,7 @@ fn setup_cat_paw(
             MeshMaterial2d(mat_black.clone()),
             Transform::from_scale(Vec3::splat(palm_scale)),
             PawPalm,
+            PawPart,
         ))
         .with_children(|parent| {
             // Inner white palm
@@ -275,6 +281,7 @@ fn poll_mouse_input(
 }
 
 // Logic to make the paw follow the mouse cursor
+#[allow(clippy::type_complexity)]
 fn follow_mouse(
     window_query: Query<&Window>,
     camera_query: Query<(&Camera, &GlobalTransform)>,
@@ -441,53 +448,47 @@ fn animate_paw(
 // Handle global shortcuts (Left+Right click)
 fn handle_shortcuts(
     mouse_state: Res<GlobalMouseState>,
-    mut cursor_control: ResMut<CursorControl>,
-    mut exit: MessageWriter<AppExit>,
-    mut cursor_options_query: Query<&mut CursorOptions, With<PrimaryWindow>>,
-    mut paw_visibility: Query<&mut Visibility, Or<(With<PawArm>, With<PawPalm>, With<PawBottom>)>>,
     time: Res<Time>,
+    mut cursor_control: ResMut<CursorControl>,
+    mut visibility_query: Query<&mut Visibility, With<PawPart>>,
+    mut exit: MessageWriter<AppExit>,
 ) {
-    let mouse = &mouse_state.0;
     // 1=Left, 2=Right
+    let mouse = &mouse_state.0;
     let left = mouse.button_pressed.get(1).cloned().unwrap_or(false);
     let right = mouse.button_pressed.get(2).cloned().unwrap_or(false);
     let both_pressed = left && right;
 
-    let now = time.elapsed_secs_f64();
+    let now = time.elapsed_secs();
 
     if both_pressed {
-        if cursor_control.lr_press_start.is_none() {
-            cursor_control.lr_press_start = Some(now);
-        } else {
-            let start = cursor_control.lr_press_start.unwrap();
+        if let Some(start) = cursor_control.lr_press_start {
             // Long press (> 2s) to exit app
             if now - start > 2.0 {
+                cursor_control.is_hidden = true;
                 exit.write(AppExit::Success);
             }
+        } else {
+            // Just pressed
+            cursor_control.lr_press_start = Some(now);
         }
     } else {
+        // Hide the paw when the left and right mouse buttons are quickly pressed at the same time
         if let Some(start) = cursor_control.lr_press_start {
             // Released
             let duration = now - start;
-            // Short press (< 2s) to toggle visibility
-            if duration < 2.0 {
+            // Short press (< 0.5s) to toggle visibility
+            if duration < 0.5 {
                 // Toggle
                 cursor_control.is_hidden = !cursor_control.is_hidden;
 
-                // Toggle OS cursor visibility (Inverse of Paw visibility)
-                if let Some(mut options) = cursor_options_query.iter_mut().next() {
-                    options.visible = cursor_control.is_hidden;
-                }
-
                 // Toggle Paw visibility
-                let new_vis = if cursor_control.is_hidden {
-                    Visibility::Hidden
-                } else {
-                    Visibility::Inherited
-                };
-
-                for mut vis in paw_visibility.iter_mut() {
-                    *vis = new_vis;
+                for mut vis in visibility_query.iter_mut() {
+                    *vis = if cursor_control.is_hidden {
+                        Visibility::Hidden
+                    } else {
+                        Visibility::Inherited
+                    };
                 }
             }
             cursor_control.lr_press_start = None;
