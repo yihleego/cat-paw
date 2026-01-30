@@ -3,7 +3,7 @@ setlocal
 
 REM Configuration variables
 set APP_NAME=CatPaw
-set CARGO_BINARY_NAME=cat-paw
+set CARGO_BINARY_NAME=catpaw
 
 echo [INFO] Compiling Release version...
 cargo build --release
@@ -25,12 +25,11 @@ set SRC_BIN=target\release\%CARGO_BINARY_NAME%.exe
 
 if not exist "%SRC_BIN%" (
     REM Try underscore version if hyphen version doesn't exist
-    set SRC_BIN=target\release\cat_paw.exe
+    set SRC_BIN=target\release\catpaw.exe
 )
 
 if not exist "%SRC_BIN%" (
     echo [ERROR] Executable not found: %SRC_BIN%
-    echo         Checked both "cat-paw.exe" and "cat_paw.exe"
     exit /b 1
 )
 

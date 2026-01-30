@@ -3,7 +3,7 @@ set -e
 
 # Configuration variables
 APP_NAME="CatPaw"
-CARGO_BINARY_NAME="cat-paw"
+CARGO_BINARY_NAME="catpaw"
 BUNDLE_ID="io.leego.catpaw"
 ICON_SOURCE="build/macos/icon_1024x1024.png"
 PLIST_SOURCE="build/macos/src/CatPaw.app/Contents/Info.plist"

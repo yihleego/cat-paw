@@ -9,13 +9,21 @@ permissions:
   contents: write
 
 env:
-  APP_NAME: CatPaw
+  GAME_EXECUTABLE_NAME: catpaw
+  GAME_OSX_APP_NAME: CatPaw
   CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
 
 jobs:
   build-macos:
     name: Build macOS
     runs-on: macos-latest
+    strategy:
+      matrix:
+        include:
+          - target: aarch64-apple-darwin
+            suffix: _Silicon
+          - target: x86_64-apple-darwin
+            suffix: _Intel
     env:
       MACOSX_DEPLOYMENT_TARGET: 11.0
     steps:
@@ -24,38 +32,31 @@ jobs:
         uses: dawidd6/action-get-tag@v1
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Install rust toolchain for Apple Silicon
+      - name: Install rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-          target: aarch64-apple-darwin
-      - name: Build release for Apple Silicon
+          target: ${{ matrix.target }}
+      - name: Build release
         run: |
-          SDKROOT=$(xcrun -sdk macosx --show-sdk-path) cargo build --release --target=aarch64-apple-darwin
-      - name: Install rust toolchain for Apple x86
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          target: x86_64-apple-darwin
-      - name: Build release for x86 Apple
-        run: |
-          SDKROOT=$(xcrun -sdk macosx --show-sdk-path) cargo build --release --target=x86_64-apple-darwin
-      - name: Create Universal Binary
-        run: |
-          lipo -create -output target/release/${{ env.APP_NAME }} target/aarch64-apple-darwin/release/${{ env.APP_NAME }} target/x86_64-apple-darwin/release/${{ env.APP_NAME }}
+          SDKROOT=$(xcrun -sdk macosx --show-sdk-path) cargo build --release --target=${{ matrix.target }}
       - name: Create release
         run: |
-          mkdir -p build/macos/src/Game.app/Contents/MacOS/assets
-          cp -r assets/ build/macos/src/Game.app/Contents/MacOS/assets
-          cp target/release/${{ env.APP_NAME }} build/macos/src/Game.app/Contents/MacOS/
-          strip build/macos/src/Game.app/Contents/MacOS/${{ env.APP_NAME }}
-          mv build/macos/src/Game.app build/macos/src/${{ env.APP_NAME }}.app
-          ln -s /Applications build/macos/src/
-          hdiutil create -fs HFS+ -volname "${{ env.APP_NAME }}" -srcfolder build/macos/src ${{ env.APP_NAME }}.dmg
+          APP_NAME="${{ env.GAME_OSX_APP_NAME }}"
+          EXECUTABLE_NAME="${{ env.GAME_EXECUTABLE_NAME }}"
+          STAGING="build/macos/staging"
+          rm -rf "$STAGING"
+          mkdir -p "$STAGING"
+          cp -r "build/macos/src/${APP_NAME}.app" "$STAGING/"
+          cp "target/${{ matrix.target }}/release/${EXECUTABLE_NAME}" "$STAGING/${APP_NAME}.app/Contents/MacOS/"
+          strip "$STAGING/${APP_NAME}.app/Contents/MacOS/${EXECUTABLE_NAME}"
+          ln -s /Applications "$STAGING/"
+          hdiutil create -fs HFS+ -volname "${APP_NAME}" -srcfolder "$STAGING" "${EXECUTABLE_NAME}${{ matrix.suffix }}.dmg"
       - name: Upload release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ env.APP_NAME }}.dmg
-          asset_name: ${{ env.APP_NAME }}_${{ steps.tag.outputs.tag }}_macOS.dmg
+          file: ${{ env.GAME_EXECUTABLE_NAME }}${{ matrix.suffix }}.dmg
+          asset_name: ${{ env.GAME_EXECUTABLE_NAME }}_${{ steps.tag.outputs.tag }}${{ matrix.suffix }}.dmg
           tag: ${{ github.ref }}
           overwrite: true
 
@@ -73,36 +74,19 @@ jobs:
         uses: actions/checkout@v4
       - name: Install rust toolchain
         uses: dtolnay/rust-toolchain@stable
-      - name: Install dotnet
-        uses: actions/setup-dotnet@v3
-        with:
-          global-json-file: build/windows/installer/global.json
       - name: Build release
         run: |
           cargo build --release
-      - name: Prepare release
-        run: |
-          mkdir target/release/assets && cp -r assets target/release/assets
       - name: Zip release
         uses: vimtor/action-zip@v1
         with:
-          files: target/release/assets/ target/release/${{ env.APP_NAME }}.exe
-          dest: ${{ env.APP_NAME }}_windows.zip
-      - name: Create Installer
-        run: dotnet build -c Release build/windows/installer/Installer.wixproj --output installer
+          files: target/release/${{ env.GAME_EXECUTABLE_NAME }}.exe
+          dest: ${{ env.GAME_EXECUTABLE_NAME }}_windows.zip
       - name: Upload release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ env.APP_NAME }}_windows.zip
-          asset_name: ${{ env.APP_NAME }}_${{ steps.tag.outputs.tag }}_windows.zip
-          tag: ${{ github.ref }}
-          overwrite: true
-      - name: Upload installer
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: installer/en-US/installer.msi
-          asset_name: ${{ env.APP_NAME }}_${{ steps.tag.outputs.tag }}_windows.msi
+          file: ${{ env.GAME_EXECUTABLE_NAME }}_windows.zip
+          asset_name: ${{ env.GAME_EXECUTABLE_NAME }}_${{ steps.tag.outputs.tag }}_windows.zip
           tag: ${{ github.ref }}
           overwrite: true
