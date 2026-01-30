@@ -71,8 +71,11 @@ cargo run
 
 ## 已知问题
 
-- **Vulkan 窗口透明度**：在某些使用 Vulkan 图形 API 的环境中，窗口透明度可能会失效，导致背景显示为黑色而不是透明覆盖层。这通常与
-  GPU 驱动程序支持或系统合成器设置有关。
+- **透明窗口**：在是用 NVIDIA 显卡的 Windows 系统上，窗口背景可能会显示为黑色而不是透明。
+  [bevy#7544](https://github.com/bevyengine/bevy/issues/7544)
+    - **修复方法**：打开 **NVIDIA Control Panel**，进入 **Manage 3D Settings**，找到 **Vulkan/OpenGL present method**，
+      并将其设置为 **Prefer native**。
+      <img src="docs/nvidia_settings.png" width="500" alt="nvidia_settings.jpg">
 
 ## License
 
